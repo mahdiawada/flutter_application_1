@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/cart.dart';
 import 'package:flutter_application_1/details.dart';
-
+import 'package:flutter_application_1/search.dart';
+import 'products.dart';
 class Homepage extends StatefulWidget{
   const Homepage({super.key});
 
@@ -16,45 +18,65 @@ class _HomepageState extends State<Homepage> {
     {"iconname": Icons.mobile_friendly , "title" : "Mobile"} ,
     {"iconname": Icons.electric_bike , "title" : "Electronics"} ,
     {"iconname": Icons.headphones , "title" : "Accesories"} ,
-    {"iconname": Icons.car_rental , "title" : "Cars"} ,
-    {"iconname": Icons.motorcycle , "title" : "Motorcycles"} ,
-    
   ];
 
-  List items = [
-    {"image":"./images/mobile1.jpg","title":"Iphone 15","category":"Mobiles Category","price":"Price: 500\$"},
-    {"image":"./images/headphones1.jpg","title":"Headphones Razor","category":"Accesories","price":"Price: 100\$"},
-    {"image":"./images/electronics1.jpg","title":"Usb","category":"Electronics","price":"Price: 50\$"},
-    {"image":"./images/mobile2.jpg","title":"S24 Ultra","category":"Mobile Category","price":"Price: 600\$"},
-    {"image":"./images/laptop1.jpg","title":"MacBook","category":"Laptops Category","price":"Price: 900\$"},
-    {"image":"./images/electronics2.jpg","title":"Ardiuno","category":"Electronics","price":"Price: 30\$"},
-  ];
+    bool _loaded = false; 
+
+  void update(bool success) {
+    setState(() {
+      _loaded = true; 
+      if (!success) { 
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to load data')));
+      }
+    });
+  }
+
+  @override
+  void initState() {
+    getProducts(update);
+    super.initState();
+  }
+
+
+
   @override
   Widget build(BuildContext context){
     return Scaffold(
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.grey[300],
-        iconSize: 25,
-        selectedItemColor: Colors.orange,
-        items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.home_outlined),label: "*") ,
-        BottomNavigationBarItem(icon: Icon(Icons.shopping_basket),label: "*") ,
-        BottomNavigationBarItem(icon: Icon(Icons.person_2_outlined),label: "*") ,
-      ]),
+      bottomNavigationBar: BottomAppBar(
+    color: Colors.grey[300],
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: [
+        IconButton(
+          icon: const Icon(Icons.home_outlined, size: 25),
+          onPressed: () {
+             Navigator.push(context,MaterialPageRoute(builder: (context) => Homepage()));
+          },
+        ),
+        IconButton(
+          icon: const Icon(Icons.shopping_basket, size: 25),
+          onPressed: () {
+            Navigator.push(context,MaterialPageRoute(builder: (context) => Cart()),);
+          },
+        ),
+        IconButton(
+          icon: const Icon(Icons.person_2_outlined, size: 25),onPressed: () {})
+          ],),
+  ),
       body: Container(
         padding: const EdgeInsets.all(20),
         child: ListView(
           children: [
             Row(children: [
-              Expanded(child: TextFormField(
-                
-                decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.search , color: Colors.black,),
-                  hintText: "Search",
-                  border: OutlineInputBorder( borderRadius: BorderRadius.circular(10) , borderSide: BorderSide.none),
-                  fillColor: Colors.grey[300],
-                  filled: true
-                ),
+              Expanded(child: MaterialButton(
+                textColor: Colors.white,
+                padding: const EdgeInsets.all(15),
+                color: Colors.orange,
+                child: const Text("Click To Search For Products" ,style: TextStyle(fontSize: 17,fontWeight: FontWeight.w600),),
+                onPressed: (){
+                  Navigator.of(context).push(
+                      MaterialPageRoute(builder: (context) => const Search()));
+                },
               )) ,
             const  Padding(
                 padding: EdgeInsets.only(left: 12),
@@ -98,7 +120,24 @@ class _HomepageState extends State<Homepage> {
             ),
            const Text("Best Selling" ,style: TextStyle(fontWeight: FontWeight.w600 , fontSize: 20),),
              Container(height: 10,),  
-             GridView.builder(
+              _loaded ? const ShowProducts() : const Center(
+            child: SizedBox(width: 100, height: 100, child: CircularProgressIndicator()))
+          ],
+          
+        ),
+      ),
+    );
+  }
+}
+
+
+class ShowProducts extends StatelessWidget {
+  const ShowProducts({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return  GridView.builder(
+      
               physics:const NeverScrollableScrollPhysics(),
               shrinkWrap: true,
               gridDelegate: 
@@ -108,11 +147,11 @@ class _HomepageState extends State<Homepage> {
                 mainAxisSpacing: 10, 
                 mainAxisExtent: 300 
                 ),
-              itemCount: items.length,
+              itemCount: products.length,
              itemBuilder: (context , i){
                     return  InkWell(
                       onTap: () {
-                        Navigator.of(context).push(MaterialPageRoute(builder: (context) => ItemsDetails(data:items[i])));
+                        Navigator.of(context).push(MaterialPageRoute(builder: (context) => ItemsDetails(data:products[i])));
                       },
                       child: Card(
                                       elevation: 10,
@@ -120,27 +159,32 @@ class _HomepageState extends State<Homepage> {
                                         Container(
                       padding: const EdgeInsets.all(20),
                       width: 300,
-                      child: Image.asset(items[i]['image'],height: 130,fit: BoxFit.fill,),
-                      ) , 
-                                         Text(items[i]['title'] ,style: TextStyle(fontWeight: FontWeight.w800),),
-                                         Text(items[i]['category'] , style: TextStyle(fontWeight: FontWeight.w400 , color: Colors.grey[600]),),
-                                         Text(items[i]['price'] , style: TextStyle(fontWeight: FontWeight.w400 , color: Colors.grey[600]),),
-                                         Container(height: 10,),
-                                         MaterialButton(
-                      color: Colors.orange,
-                      textColor: Colors.white,
-                      child: const Text("Purchase" , style: TextStyle(fontWeight: FontWeight.w600),),
-                      onPressed: (){})
+                      child: Image.asset('./images/${products[i].imagelink}',height: 130,fit: BoxFit.fill, errorBuilder: (context, error, stackTrace) {
+                      return const Icon(
+                        Icons.image_not_supported,
+                        size: 130,
+                      );
+                    },),
                       
+                      ) , 
+                          Text(products[i].name ,style: const TextStyle(fontWeight: FontWeight.w800),),
+                          Text(products[i].category, style: TextStyle(fontWeight: FontWeight.w400 , color: Colors.grey[600]),),
+                          Text("Price: \$${products[i].price.toStringAsFixed(2)}" , style: TextStyle(fontWeight: FontWeight.w400 , color: Colors.grey[600]),),
+                          Container(height: 10,),
+                      MaterialButton(
+                            color: Colors.orange,
+                            textColor: Colors.white,
+                            child: const Text("Purchase",style: TextStyle(fontWeight: FontWeight.w600),),
+                            onPressed: () {
+                            Navigator.of(context).push(
+                            MaterialPageRoute(builder: (context) => ItemsDetails(data:products[i]), ),
+                              );
+                                },
+                                  )
                                       ]),
                                      ),
                     ) ;
                 }
-              ),
-          ],
-          
-        ),
-      ),
-    );
+              );
   }
 }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/homepage.dart';
+import 'package:flutter_application_1/signup.dart';
 
 void main() {
   runApp(MyApp());
@@ -15,7 +15,7 @@ class _MyAppState extends State<MyApp>{
   Widget  build(BuildContext context){
     return const MaterialApp(
         debugShowCheckedModeBanner: false,
-        home: Homepage(),
+        home: Signup(),
     );
   }
 }
